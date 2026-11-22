@@ -91,6 +91,11 @@ h1{font-size:22px;font-weight:800}h2{font-size:17px;font-weight:800;margin-botto
   <button class="go" id="dist">وزّع أكواد النهارده</button>
   <div id="drep" class="mut" style="margin:8px 0;white-space:pre-wrap"></div>
   <div id="stats"></div>
+    <h2 style="margin-top:14px">إضافة حاجات للمتجر</h2>
+  <p class="mut">سطر لكل حاجة: النوع,الاسم,السعر<br>الأنواع: سلاح / درع / خوذة / أداة</p>
+  <textarea id="shopbulk" placeholder="سلاح,مسدس,25"></textarea>
+  <button class="go" id="addshop">إضافة للمتجر</button>
+  <div id="srep" class="mut" style="margin-top:8px;white-space:pre-wrap"></div>
   <button id="oclose" style="margin-top:10px">رجوع</button>
  </div>
 </section>
@@ -199,7 +204,20 @@ async function stats(){
  RAR.forEach(r=>c[r]={'متاح':0,'اتوزع':0});
  s.forEach(d=>{const x=d.data();if(c[x.rarity])c[x.rarity][x.status]=(c[x.rarity][x.status]||0)+1});
  $('stats').innerHTML='<h2>الأكواد</h2>'+RAR.map(r=>`<div style="border-right:3px solid ${COL[r]};padding-right:8px;margin-bottom:4px">${r}: متاح ${c[r]['متاح']} · اتوزع ${c[r]['اتوزع']}</div>`).join('');
-}
+}$('addshop').onclick=async()=>{
+ const lines=$('shopbulk').value.split('\n').map(l=>l.trim()).filter(Boolean);
+ if(!lines.length)return;$('srep').textContent='جاري الإضافة...';
+ let ok=0,bad=[],n=Date.now();
+ for(const l of lines){
+  const [t,nm,p]=l.split(',').map(x=>(x||'').trim());
+  const price=parseInt(p);
+  if(!['سلاح','درع','خوذة','أداة'].includes(t)||!nm||!(price>0)){bad.push(l+'  ← بيانات غلط');continue}
+  const stack=(nm==='علاج'||nm==='قنبلة');
+  try{await db.doc('shop/shop_'+(n++)).set({type:t,name:nm,price:price,stackable:stack});ok++}catch(e){bad.push(l+'  ← '+e.message)}
+ }
+ $('srep').textContent='اتضاف: '+ok+'\nاترفض: '+bad.length+(bad.length?'\n'+bad.join('\n'):'');
+ if(!bad.length)$('shopbulk').value='';
+};
 function roll(){let x=Math.random()*100,a=0;for(let i=0;i<4;i++){a+=CHANCE[i];if(x<a)return i}return 0}
 
 $('dist').onclick=async()=>{
