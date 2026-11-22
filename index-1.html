@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Toolix</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e141b;--panel:#17202a;--line:#2a3644;--tx:#e8e4da;--mut:#8b97a5;--gold:#c8a35a;--r0:#9aa3ad;--r1:#4f8fd6;--r2:#a16ad8;--r3:#e0a23a}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{background:radial-gradient(120% 90% at 50% 0%,#18222d,var(--bg));color:var(--tx);font:15px/1.5 Cairo,system-ui,sans-serif;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.scr{height:100%;overflow:auto;padding:14px 18px}
+[hidden]{display:none!important}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--tx);padding:8px 16px;border-radius:6px}
+button:disabled{opacity:.5;cursor:default}
+button.go{background:var(--gold);color:#1b1608;border-color:var(--gold);font-weight:800}
+input,textarea{font:inherit;width:100%;background:#0b1117;color:var(--tx);border:1px solid var(--line);border-radius:6px;padding:9px 11px;margin-bottom:8px}
+h1{font-size:22px;font-weight:800}h2{font-size:17px;font-weight:800;margin-bottom:6px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px}
+.mut{color:var(--mut);font-size:13px}.err{color:#e58a7e;min-height:22px;font-size:13px}.ok{color:#8fc79a;min-height:22px;font-size:13px}
+#auth{display:flex;align-items:center;justify-content:center}
+#auth .card{width:min(420px,100%)}
+.row{display:flex;gap:8px}.row>*{flex:1}
+#chars .list{display:flex;gap:10px;margin-top:10px}
+.ch{flex:1;min-width:0;text-align:center;padding:0;overflow:hidden;border-radius:8px}
+.ch .ph{height:34vh;background:#0b1117;position:relative;display:flex;align-items:center;justify-content:center;font-size:48px;font-weight:800;color:var(--line)}
+.ch img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top}
+.ch b{display:block;padding:6px 4px 0}.ch span{display:block;padding:0 4px 8px;color:var(--mut);font-size:12px}
+.ch:hover,.ch:focus{border-color:var(--gold)}
+#main{display:flex;gap:14px}
+#side{width:34%;display:flex;flex-direction:column;gap:10px}
+#inv{flex:1;display:flex;flex-direction:column;min-width:0}
+.coins{font-size:26px;font-weight:800;color:var(--gold)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;overflow:auto;align-content:start}
+.it{background:#0b1117;border:1px solid var(--line);border-top:3px solid var(--c);border-radius:6px;padding:8px 10px}
+.it small{color:var(--c)}
+.pop{animation:pop .5s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{from{transform:scale(.5);opacity:0}}
+@media(prefers-reduced-motion:reduce){.pop{animation:none}}
+#modal{position:fixed;inset:0;background:#000c;display:flex;align-items:center;justify-content:center;z-index:6}
+#modal .card{text-align:center;min-width:260px;border-top:4px solid var(--c)}
+#owner{position:fixed;inset:0;background:var(--bg);z-index:4;display:flex;gap:14px}
+#owner>div{flex:1;overflow:auto}
+#owner textarea{height:22vh;font-family:monospace;direction:ltr}
+#shop{position:fixed;inset:0;background:var(--bg);z-index:4}
+.shead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:10px}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:10px}
+.si{background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.si .im{aspect-ratio:1/1;background:#0b1117;display:flex;align-items:center;justify-content:center;font-size:40px;position:relative}
+.si .im img,.it img{background:#0b1117}
+.si .im img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.si .bd{padding:8px 10px}
+.price{color:var(--gold);font-weight:800}
+#turn{display:none;position:fixed;inset:0;background:var(--bg);z-index:9;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:18px}
+@media(orientation:portrait){#turn{display:flex}}
+</style>
+</head>
+<body>
+<div id="turn">لف الموبايل بالعرض عشان تلعب 📱↔️</div>
+
+<section class="scr" id="auth" hidden>
+ <div class="card">
+  <h1>Toolix</h1><p class="mut" style="margin-bottom:10px">سجّل حساب جديد أو ادخل بحسابك</p>
+  <input id="un" placeholder="اسم اللاعب (للتسجيل الجديد فقط)">
+  <input id="em" type="email" placeholder="البريد الإلكتروني" dir="ltr">
+  <input id="pw" type="password" placeholder="كلمة السر (6 حروف على الأقل)" dir="ltr">
+  <div class="err" id="aerr"></div>
+  <div class="row"><button class="go" id="login">دخول</button><button id="reg">حساب جديد</button></div>
+ </div>
+</section>
+
+<section class="scr" id="chars" hidden>
+ <h1>اختار شخصيتك</h1><p class="mut">الاختيار مرة واحدة ومينفعش يتغير بعدين.</p>
+ <div class="list" id="clist"></div><div class="err" id="cerr"></div>
+</section>
+
+<section class="scr" id="main" hidden>
+ <div id="side">
+  <div class="card"><h2 id="who"></h2><div class="mut" id="chn"></div>
+   <div class="coins" id="coins">0</div><div class="mut">كوينز</div></div>
+  <button class="go" id="shopbtn" style="padding:12px">🛒 المتجر</button>
+  <div class="card"><h2>كود اليوم</h2><div class="mut" id="dmsg" style="margin-bottom:8px"></div>
+   <button class="go" id="daily" hidden>استلم كود اليوم</button></div>
+  <div class="row"><button id="ownbtn" hidden>لوحة المالك</button><button id="out">خروج</button></div>
+ </div>
+ <div id="inv" class="card"><h2>المخزن</h2><div class="grid" id="grid"></div></div>
+</section>
+
+<section class="scr" id="shop" hidden>
+ <div class="shead"><h1>🛒 المتجر</h1><div class="coins" id="scoins"></div></div>
+ <div class="sgrid" id="shopgrid"></div>
+ <div id="smsg" class="err"></div>
+ <button id="sclose">رجوع</button>
+</section>
+
+<section id="owner" hidden class="scr">
+ <div class="card">
+  <h2>إضافة أكواد</h2>
+  <p class="mut">سطر لكل كود: الكود,النوع,الاسم,الندرة<br>الأنواع: سلاح / أداة / سكن / كوينز (واسمها الرقم)<br>الندرة: عادي / نادر / ملحمي / أسطوري</p>
+  <textarea id="bulk" placeholder="AK7-91X,سلاح,سيف الظل,أسطوري&#10;K22-LM,كوينز,100,عادي"></textarea>
+  <button class="go" id="addc">إضافة الأكواد</button>
+  <div id="rep" class="mut" style="margin-top:8px;white-space:pre-wrap"></div>
+  <h2 style="margin-top:14px">التوزيع والإحصائيات</h2>
+  <p class="mut" style="margin-bottom:8px">كل لاعب ياخد كود عشوائي واحد في اليوم. اضغط مرة يومياً.</p>
+  <button class="go" id="dist">وزّع أكواد النهارده</button>
+  <div id="drep" class="mut" style="margin:8px 0;white-space:pre-wrap"></div>
+  <div id="stats"></div>
+  <button id="oclose" style="margin-top:10px">رجوع</button>
+ </div>
+ <div class="card">
+  <h2>إضافة حاجات للمتجر</h2>
+  <p class="mut">سطر لكل حاجة: النوع,الاسم,السعر,ملف الصورة (اختياري)<br>الأنواع: سلاح / درع / خوذة / أداة</p>
+  <textarea id="shopbulk" placeholder="سلاح,مسدس,25,pistol.png"></textarea>
+  <button class="go" id="addshop">إضافة للمتجر</button>
+  <div id="srep" class="mut" style="margin:8px 0;white-space:pre-wrap"></div>
+  <h2 style="margin-top:14px">حاجات المتجر الحالية</h2>
+  <p class="mut" style="margin-bottom:8px">اكتب اسم ملف الصورة (من فولدر img) واضغط حفظ. علّم "يتكدّس" للحاجات اللي اللاعب يشتريها أكتر من مرة (علاج، قنابل).</p>
+  <div id="shoplist"></div>
+ </div>
+</section>
+
+<div id="modal" hidden><div class="card pop" id="mbox"></div></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyCl_veh7PXj0JKR0MWQ0_Q01sugxt9jCL0",
+  authDomain:"toolix-48dfd.firebaseapp.com",
+  projectId:"toolix-48dfd",
+  storageBucket:"toolix-48dfd.firebasestorage.app",
+  messagingSenderId:"819953888727",
+  appId:"1:819953888727:web:64716c35e1048c212f2f92"
+});
+const auth=firebase.auth(),db=firebase.firestore(),FV=firebase.firestore.FieldValue;
+const $=id=>document.getElementById(id);
+const CH=[{n:'Crom',d:'محارب جريء',i:'ziad'},{n:'Jack',d:'تاجر ذكي',i:'karim'},{n:'Jessica',d:'مقاتلة رشيقة',i:'laila'},{n:'Tom',d:'مستكشف فضولي',i:'salma'},{n:'Maria',d:'ساحرة غامضة',i:'nour'}];
+const RAR=['عادي','نادر','ملحمي','أسطوري'],CHANCE=[60,25,12,3],TYPES=['سلاح','أداة','سكن','كوينز'],STYPES=['سلاح','درع','خوذة','أداة'];
+const COL={'عادي':'var(--r0)','نادر':'var(--r1)','ملحمي':'var(--r2)','أسطوري':'var(--r3)'};
+const ICON={'سلاح':'🔫','درع':'🛡️','خوذة':'⛑️','أداة':'🧰'};
+let me=null,user=null,subs=[],pending=null,shopItems=[],inv={};
+
+function show(id){['auth','chars','main'].forEach(s=>$(s).hidden=s!==id)}
+function errTxt(e){const m={'auth/email-already-in-use':'البريد ده مسجل قبل كده، جرّب "دخول".','auth/invalid-credential':'البريد أو كلمة السر غلط.','auth/wrong-password':'كلمة السر غلط.','auth/user-not-found':'مفيش حساب بالبريد ده.','auth/weak-password':'كلمة السر ضعيفة، اكتب 6 حروف على الأقل.','auth/invalid-email':'شكل البريد غلط.'};return m[e.code]||e.message}
+function today(){return new Date().toLocaleDateString('en-CA')}
+function mkImg(file,style){const i=document.createElement('img');i.src='img/'+file;i.alt='';if(style)i.style.cssText=style;i.onerror=()=>i.remove();return i}
+
+$('reg').onclick=async()=>{
+ $('aerr').textContent='';const u=$('un').value.trim();
+ if(!u){$('aerr').textContent='اكتب اسم اللاعب.';return}
+ try{const c=await auth.createUserWithEmailAndPassword($('em').value.trim(),$('pw').value);
+  await db.doc('users/'+c.user.uid).set({username:u,character:null,coins:0})}
+ catch(e){$('aerr').textContent=errTxt(e)}
+};
+$('login').onclick=async()=>{
+ $('aerr').textContent='';
+ try{await auth.signInWithEmailAndPassword($('em').value.trim(),$('pw').value)}catch(e){$('aerr').textContent=errTxt(e)}
+};
+$('out').onclick=()=>auth.signOut();
+
+CH.forEach(c=>{
+ const b=document.createElement('button');b.className='ch';
+ b.innerHTML=`<div class="ph">${c.n[0]}<img src="img/${c.i}.jpg" alt="" onerror="this.remove()"></div><b>${c.n}</b><span>${c.d}</span>`;
+ b.onclick=async()=>{
+  if(!confirm('تختار '+c.n+'؟ مينفعش تغيرها بعدين.'))return;
+  try{await db.doc('users/'+me.uid).update({character:c.n})}catch(e){$('cerr').textContent=errTxt(e)}};
+ $('clist').appendChild(b)});
+
+auth.onAuthStateChanged(u=>{
+ subs.forEach(f=>f());subs=[];me=u;user=null;pending=null;inv={};shopItems=[];
+ if(!u){show('auth');$('shop').hidden=true;$('owner').hidden=true;return}
+ subs.push(db.doc('users/'+u.uid).onSnapshot(s=>{
+  if(!s.exists)return;user=s.data();
+  if(!user.character){show('chars');return}
+  show('main');$('who').textContent=user.username;$('chn').textContent='الشخصية: '+user.character;
+  $('coins').textContent=user.coins||0;$('ownbtn').hidden=user.role!=='owner';renderShop()}));
+ subs.push(db.collection('users/'+u.uid+'/inventory').onSnapshot(s=>{
+  inv={};s.forEach(d=>inv[d.id]=d.data());renderInv();renderShop()}));
+ subs.push(db.collection('shop').onSnapshot(s=>{
+  shopItems=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.price-b.price);
+  renderShop();renderInv();renderMgr()},e=>{}));
+ subs.push(db.collection('users/'+u.uid+'/pending').onSnapshot(s=>{
+  pending=s.empty?null:s.docs[0];
+  $('daily').hidden=!pending;
+  $('dmsg').textContent=pending?'في كود مستنيك!':'لسه مفيش كود النهارده. ارجع بعد شوية.'}));
+});
+
+/* ---- المخزن ---- */
+function renderInv(){
+ const g=$('grid');g.innerHTML='';const ids=Object.keys(inv);
+ if(!ids.length){g.innerHTML='<div class="mut">المخزن فاضي. استلم كود اليوم أو اشتري من المتجر.</div>';return}
+ ids.forEach(id=>{
+  const x=inv[id],e=document.createElement('div');e.className='it';e.style.setProperty('--c',COL[x.rarity]||'var(--r0)');
+  e.innerHTML='<b></b><br><small></small>';
+  e.querySelector('b').textContent=x.name+(x.qty>1?' ×'+x.qty:'');
+  e.querySelector('small').textContent=x.type+(x.rarity?' · '+x.rarity:'');
+  const si=x.shopId&&shopItems.find(s=>s.id===x.shopId);
+  if(si&&si.img)e.prepend(mkImg(si.img,'width:100%;height:70px;object-fit:contain;margin-bottom:4px'));
+  g.appendChild(e)})}
+
+/* ---- كود اليوم ---- */
+$('daily').onclick=async()=>{
+ if(!pending)return;const d=pending.data(),b=db.batch();
+ if(d.rewardType!=='كوينز')b.set(db.doc(`users/${me.uid}/inventory/${pending.id}`),{name:d.rewardName,type:d.rewardType,rarity:d.rarity,at:FV.serverTimestamp()});
+ b.delete(pending.ref);
+ try{await b.commit();reveal(d)}catch(e){alert(errTxt(e))}
+};
+function reveal(d){
+ const box=$('mbox');box.style.setProperty('--c',COL[d.rarity]);
+ box.innerHTML='<div class="mut">مكافأتك النهارده</div><h1 style="margin:8px 0"></h1><div style="color:var(--c)"></div><button class="go" style="margin-top:12px">تمام</button>';
+ box.querySelector('h1').textContent=d.rewardType==='كوينز'?'+'+d.rewardName+' كوينز':d.rewardName;
+ box.querySelector('div:nth-of-type(2)').textContent=d.rewardType+' · '+d.rarity;
+ box.querySelector('button').onclick=()=>$('modal').hidden=true;
+ $('modal').hidden=false;box.classList.remove('pop');void box.offsetWidth;box.classList.add('pop');
+}
+
+/* ---- المتجر (للاعب) ---- */
+$('shopbtn').onclick=()=>{$('smsg').textContent='';$('shop').hidden=false;renderShop()};
+$('sclose').onclick=()=>$('shop').hidden=true;
+
+function renderShop(){
+ const g=$('shopgrid');if(!g)return;g.innerHTML='';
+ $('scoins').textContent=((user&&user.coins)||0)+' كوينز';
+ if(!shopItems.length){g.innerHTML='<div class="mut">المتجر فاضي دلوقتي.</div>';return}
+ const coins=(user&&user.coins)||0;
+ shopItems.forEach(it=>{
+  const owned=inv['buy_'+it.id],e=document.createElement('div');e.className='si';
+  e.innerHTML='<div class="im"></div><div class="bd"><b></b><div class="price"></div><button class="go" style="width:100%;margin-top:6px"></button></div>';
+  const im=e.querySelector('.im');im.textContent=ICON[it.type]||'📦';
+  if(it.img)im.appendChild(mkImg(it.img));
+  e.querySelector('b').textContent=it.name;
+  e.querySelector('.price').textContent=it.price+' كوينز'+(it.stackable&&owned?' · معاك '+owned.qty:'');
+  const bt=e.querySelector('button');
+  if(owned&&!it.stackable){bt.textContent='معاك بالفعل';bt.disabled=true}
+  else if(coins<it.price){bt.textContent='الكوينز مش كفاية';bt.disabled=true}
+  else{bt.textContent='شراء';bt.onclick=()=>buy(it,bt)}
+  g.appendChild(e)})}
+
+async function buy(it,bt){
+ const m=$('smsg');m.className='err';m.textContent='';bt.disabled=true;
+ const owned=inv['buy_'+it.id],ref=db.doc(`users/${me.uid}/inventory/buy_${it.id}`),b=db.batch();
+ b.update(db.doc('users/'+me.uid),{coins:(user.coins||0)-it.price,lastBuy:it.id});
+ if(owned)b.update(ref,{qty:(owned.qty||1)+1});
+ else b.set(ref,{name:it.name,type:it.type,rarity:'عادي',shopId:it.id,qty:1,at:FV.serverTimestamp()});
+ try{await b.commit();m.className='ok';m.textContent='تم شراء '+it.name+' ✅'}
+ catch(e){m.className='err';m.textContent='مقدرناش نكمل الشراء: '+errTxt(e)}
+}
+
+/* ---- لوحة المالك ---- */
+$('ownbtn').onclick=()=>{$('owner').hidden=false;stats();renderMgr()};
+$('oclose').onclick=()=>$('owner').hidden=true;
+
+$('addc').onclick=async()=>{
+ const lines=$('bulk').value.split('\n').map(l=>l.trim()).filter(Boolean);
+ if(!lines.length)return;$('rep').textContent='جاري الإضافة...';
+ const ex=new Set((await db.collection('codes').get()).docs.map(d=>d.id));let ok=0,bad=[];
+ for(const l of lines){
+  const [c,t,n,r]=l.split(',').map(x=>(x||'').trim());
+  if(!c||/[\/\s]/.test(c)){bad.push(l+'  ← كود غلط');continue}
+  if(ex.has(c)){bad.push(l+'  ← مكرر');continue}
+  if(!TYPES.includes(t)||!n||!RAR.includes(r)||(t==='كوينز'&&!(parseInt(n)>0))){bad.push(l+'  ← بيانات ناقصة أو غلط');continue}
+  try{await db.doc('codes/'+c).set({type:t,name:n,rarity:r,status:'متاح'});ex.add(c);ok++}catch(e){bad.push(l+'  ← '+e.message)}
+ }
+ $('rep').textContent=`اتضاف: ${ok}\nاترفض: ${bad.length}`+(bad.length?'\n'+bad.join('\n'):'');
+ if(!bad.length)$('bulk').value='';stats();
+};
+
+async function stats(){
+ const s=await db.collection('codes').get(),c={};
+ RAR.forEach(r=>c[r]={'متاح':0,'اتوزع':0});
+ s.forEach(d=>{const x=d.data();if(c[x.rarity])c[x.rarity][x.status]=(c[x.rarity][x.status]||0)+1});
+ $('stats').innerHTML='<h2>الأكواد</h2>'+RAR.map(r=>`<div style="border-right:3px solid ${COL[r]};padding-right:8px;margin-bottom:4px">${r}: متاح ${c[r]['متاح']} · اتوزع ${c[r]['اتوزع']}</div>`).join('');
+}
+
+$('addshop').onclick=async()=>{
+ const lines=$('shopbulk').value.split('\n').map(l=>l.trim()).filter(Boolean);
+ if(!lines.length)return;$('srep').textContent='جاري الإضافة...';
+ let ok=0,bad=[],n=Date.now();
+ for(const l of lines){
+  const [t,nm,p,im]=l.split(',').map(x=>(x||'').trim());
+  const price=parseInt(p);
+  if(!STYPES.includes(t)||!nm||!(price>0)){bad.push(l+'  ← بيانات غلط');continue}
+  const stack=t==='أداة'||/علاج|قنبلة|قنابل/.test(nm);
+  try{await db.doc('shop/shop_'+(n++)).set({type:t,name:nm,price:price,stackable:stack,img:im||''});ok++}catch(e){bad.push(l+'  ← '+e.message)}
+ }
+ $('srep').textContent='اتضاف: '+ok+'\nاترفض: '+bad.length+(bad.length?'\n'+bad.join('\n'):'');
+ if(!bad.length)$('shopbulk').value='';
+};
+
+function renderMgr(){
+ const l=$('shoplist');if(!l)return;l.innerHTML='';
+ if(!shopItems.length){l.innerHTML='<div class="mut">مفيش حاجات لسه.</div>';return}
+ shopItems.forEach(it=>{
+  const r=document.createElement('div');r.className='row';r.style.cssText='margin-bottom:6px;align-items:center';
+  r.innerHTML='<span style="flex:2"></span><input class="im" dir="ltr" placeholder="ملف الصورة" style="flex:2;margin:0"><label class="mut" style="flex:1"><input class="sk" type="checkbox" style="width:auto;margin:0 0 0 4px">يتكدّس</label><button class="sv">حفظ</button><button class="dl">حذف</button>';
+  r.children[0].textContent=it.name+' ('+it.price+')';
+  const inp=r.querySelector('.im'),sk=r.querySelector('.sk');inp.value=it.img||'';sk.checked=!!it.stackable;
+  r.querySelector('.sv').onclick=async()=>{try{await db.doc('shop/'+it.id).update({img:inp.value.trim(),stackable:sk.checked});$('srep').textContent='اتحفظ: '+it.name}catch(e){alert(errTxt(e))}};
+  r.querySelector('.dl').onclick=async()=>{if(!confirm('تمسح '+it.name+' من المتجر؟'))return;try{await db.doc('shop/'+it.id).delete()}catch(e){alert(errTxt(e))}};
+  l.appendChild(r)})}
+
+function roll(){let x=Math.random()*100,a=0;for(let i=0;i<4;i++){a+=CHANCE[i];if(x<a)return i}return 0}
+
+$('dist').onclick=async()=>{
+ if(!confirm('توزيع أكواد النهارده على كل اللاعبين؟'))return;
+ $('drep').textContent='جاري التوزيع...';const t=today();
+ const pool={};RAR.forEach(r=>pool[r]=[]);
+ (await db.collection('codes').where('status','==','متاح').get()).forEach(d=>pool[d.data().rarity]?.push({id:d.id,...d.data()}));
+ const players=(await db.collection('users').get()).docs.filter(d=>d.data().character&&d.data().lastDistributed!==t);
+ const take=i=>{const p=pool[RAR[i]];return p.length?p.splice(Math.random()*p.length|0,1)[0]:null};
+ let n=0,skip=0;
+ for(const u of players){
+  const ri=roll();let k=null;
+  for(let i=ri;i>=0&&!k;i--)k=take(i);
+  for(let i=ri+1;i<4&&!k;i++)k=take(i);
+  if(!k){skip=players.length-n;break}
+  const b=db.batch(),up={lastDistributed:t};
+  b.set(db.doc(`users/${u.id}/pending/${k.id}`),{rewardType:k.type,rewardName:k.name,rarity:k.rarity,date:t});
+  b.update(db.doc('codes/'+k.id),{status:'اتوزع',assignedTo:u.id,date:t});
+  if(k.type==='كوينز')up.coins=FV.increment(parseInt(k.name)||0);
+  b.update(db.doc('users/'+u.id),up);
+  try{await b.commit();n++}catch(e){$('drep').textContent='خطأ: '+e.message;return}
+ }
+ $('drep').textContent=`اتوزع على ${n} لاعب.`+(skip?`\nالأكواد خلصت، فاضل ${skip} لاعب من غير كود. زوّد أكواد وكرر التوزيع.`:'');
+ stats();
+};
+</script>
+</body>
+</html>
